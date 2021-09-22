@@ -4,12 +4,12 @@ go 1.16
 
 require (
 	github.com/Azure/azure-sdk-for-go v53.3.0+incompatible
-	github.com/Azure/go-autorest/autorest v0.11.19
+	github.com/Azure/go-autorest/autorest v0.11.21
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.8
 	github.com/Azure/go-autorest/autorest/to v0.2.0 // indirect
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0
-	github.com/aws/aws-sdk-go v1.40.27
+	github.com/aws/aws-sdk-go v1.40.46
 	github.com/coredns/caddy v1.1.1
 	github.com/dnstap/golang-dnstap v0.4.0
 	github.com/farsightsec/golang-framestream v0.3.0
@@ -31,12 +31,12 @@ require (
 	go.etcd.io/etcd/api/v3 v3.5.0
 	go.etcd.io/etcd/client/v3 v3.5.0
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
-	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069
-	google.golang.org/api v0.54.0
+	golang.org/x/sys v0.0.0-20210908233432-aa78b53d3365
+	google.golang.org/api v0.57.0
 	google.golang.org/grpc v1.40.0
-	gopkg.in/DataDog/dd-trace-go.v1 v1.32.0
-	k8s.io/api v0.22.1
-	k8s.io/apimachinery v0.22.1
-	k8s.io/client-go v0.22.1
-	k8s.io/klog/v2 v2.10.0
+	gopkg.in/DataDog/dd-trace-go.v1 v1.33.0
+	k8s.io/api v0.22.2
+	k8s.io/apimachinery v0.22.2
+	k8s.io/client-go v0.22.2
+	k8s.io/klog/v2 v2.20.0
 )
