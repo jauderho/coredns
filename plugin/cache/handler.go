@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/coredns/coredns/plugin"
+	"github.com/coredns/coredns/plugin/metadata"
 	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/request"
 
@@ -37,7 +38,8 @@ func (c *Cache) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) 
 	ttl := 0
 	i := c.getIgnoreTTL(now, state, server)
 	if i == nil {
-		crr := &ResponseWriter{ResponseWriter: w, Cache: c, state: state, server: server, do: do, ad: ad}
+		crr := &ResponseWriter{ResponseWriter: w, Cache: c, state: state, server: server, do: do, ad: ad,
+			nexcept: c.nexcept, pexcept: c.pexcept, wildcardFunc: wildcardFunc(ctx)}
 		return c.doRefresh(ctx, state, crr)
 	}
 	ttl = i.ttl(now)
@@ -58,19 +60,36 @@ func (c *Cache) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) 
 			cw := newPrefetchResponseWriter(server, state, c)
 			go c.doPrefetch(ctx, state, cw, i, now)
 		}
-		servedStale.WithLabelValues(server, c.zonesMetricLabel).Inc()
+		servedStale.WithLabelValues(server, c.zonesMetricLabel, c.viewMetricLabel).Inc()
 	} else if c.shouldPrefetch(i, now) {
 		cw := newPrefetchResponseWriter(server, state, c)
 		go c.doPrefetch(ctx, state, cw, i, now)
 	}
+
+	if i.wildcard != "" {
+		// Set wildcard source record name to metadata
+		metadata.SetValueFunc(ctx, "zone/wildcard", func() string {
+			return i.wildcard
+		})
+	}
+
 	resp := i.toMsg(r, now, do, ad)
 	w.WriteMsg(resp)
-
 	return dns.RcodeSuccess, nil
 }
 
+func wildcardFunc(ctx context.Context) func() string {
+	return func() string {
+		// Get wildcard source record name from metadata
+		if f := metadata.ValueFunc(ctx, "zone/wildcard"); f != nil {
+			return f()
+		}
+		return ""
+	}
+}
+
 func (c *Cache) doPrefetch(ctx context.Context, state request.Request, cw *ResponseWriter, i *item, now time.Time) {
-	cachePrefetches.WithLabelValues(cw.server, c.zonesMetricLabel).Inc()
+	cachePrefetches.WithLabelValues(cw.server, c.zonesMetricLabel, c.viewMetricLabel).Inc()
 	c.doRefresh(ctx, state, cw)
 
 	// When prefetching we loose the item i, and with it the frequency
@@ -103,13 +122,13 @@ func (c *Cache) Name() string { return "cache" }
 // getIgnoreTTL unconditionally returns an item if it exists in the cache.
 func (c *Cache) getIgnoreTTL(now time.Time, state request.Request, server string) *item {
 	k := hash(state.Name(), state.QType())
-	cacheRequests.WithLabelValues(server, c.zonesMetricLabel).Inc()
+	cacheRequests.WithLabelValues(server, c.zonesMetricLabel, c.viewMetricLabel).Inc()
 
 	if i, ok := c.ncache.Get(k); ok {
 		itm := i.(*item)
 		ttl := itm.ttl(now)
 		if itm.matches(state) && (ttl > 0 || (c.staleUpTo > 0 && -ttl < int(c.staleUpTo.Seconds()))) {
-			cacheHits.WithLabelValues(server, Denial, c.zonesMetricLabel).Inc()
+			cacheHits.WithLabelValues(server, Denial, c.zonesMetricLabel, c.viewMetricLabel).Inc()
 			return i.(*item)
 		}
 	}
@@ -117,11 +136,11 @@ func (c *Cache) getIgnoreTTL(now time.Time, state request.Request, server string
 		itm := i.(*item)
 		ttl := itm.ttl(now)
 		if itm.matches(state) && (ttl > 0 || (c.staleUpTo > 0 && -ttl < int(c.staleUpTo.Seconds()))) {
-			cacheHits.WithLabelValues(server, Success, c.zonesMetricLabel).Inc()
+			cacheHits.WithLabelValues(server, Success, c.zonesMetricLabel, c.viewMetricLabel).Inc()
 			return i.(*item)
 		}
 	}
-	cacheMisses.WithLabelValues(server, c.zonesMetricLabel).Inc()
+	cacheMisses.WithLabelValues(server, c.zonesMetricLabel, c.viewMetricLabel).Inc()
 	return nil
 }
 

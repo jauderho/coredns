@@ -125,7 +125,7 @@ func (l logfmt) Visit(n ast.Node) ast.Visitor {
 	if !ok {
 		return l
 	}
-	if id.Name != "t" { //t *testing.T
+	if id.Name != "t" { // t *testing.T
 		return l
 	}
 
@@ -158,7 +158,6 @@ func (l logfmt) Visit(n ast.Node) ast.Visitor {
 	for i, u := range bl.Value {
 		// disregard "
 		if i == 1 && !unicode.IsUpper(u) {
-			l.err = fmt.Errorf("test error message %s doesn't start with an uppercase", bl.Value)
 			return nil
 		}
 		if i == 1 {
@@ -181,41 +180,6 @@ func TestImportTesting(t *testing.T) {
 			t.Error(err)
 		}
 	}
-}
-
-type hasImportTestingWalker struct {
-	Errors []error
-}
-
-func (w *hasImportTestingWalker) walk(path string, info os.FileInfo, _ error) error {
-	// only for regular files, not starting with a . and those that are go files.
-	if !info.Mode().IsRegular() {
-		return nil
-	}
-	if strings.HasPrefix(path, "../.") {
-		return nil
-	}
-	if strings.Contains(path, "/vendor") {
-		return nil
-	}
-	if strings.HasSuffix(path, "_test.go") {
-		return nil
-	}
-
-	if strings.HasSuffix(path, ".go") {
-		fs := token.NewFileSet()
-		f, err := parser.ParseFile(fs, path, nil, parser.AllErrors)
-		if err != nil {
-			return err
-		}
-		for _, im := range f.Imports {
-			if im.Path.Value == `"testing"` {
-				absPath, _ := filepath.Abs(path)
-				w.Errors = append(w.Errors, fmt.Errorf("file %q is importing %q", absPath, "testing"))
-			}
-		}
-	}
-	return nil
 }
 
 func TestImportOrdering(t *testing.T) {
