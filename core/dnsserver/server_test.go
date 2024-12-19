@@ -17,7 +17,7 @@ func (tp testPlugin) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
 	return 0, nil
 }
 
-func (tp testPlugin) Name() string { return "testplugin" }
+func (tp testPlugin) Name() string { return "local" }
 
 func testConfig(transport string, p plugin.Handler) *Config {
 	c := &Config{
@@ -47,6 +47,11 @@ func TestNewServer(t *testing.T) {
 	_, err = NewServerTLS("127.0.0.1:53", []*Config{testConfig("tls", testPlugin{})})
 	if err != nil {
 		t.Errorf("Expected no error for NewServerTLS, got %s", err)
+	}
+
+	_, err = NewServerQUIC("127.0.0.1:53", []*Config{testConfig("quic", testPlugin{})})
+	if err != nil {
+		t.Errorf("Expected no error for NewServerQUIC, got %s", err)
 	}
 }
 

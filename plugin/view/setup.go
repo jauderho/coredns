@@ -9,7 +9,7 @@ import (
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/pkg/expression"
 
-	"github.com/antonmedv/expr"
+	"github.com/expr-lang/expr"
 )
 
 func init() { plugin.Register("view", setup) }
@@ -47,7 +47,7 @@ func parse(c *caddy.Controller) (*View, error) {
 			switch c.Val() {
 			case "expr":
 				args := c.RemainingArgs()
-				prog, err := expr.Compile(strings.Join(args, " "), expr.Env(expression.DefaultEnv(context.Background(), nil)))
+				prog, err := expr.Compile(strings.Join(args, " "), expr.Env(expression.DefaultEnv(context.Background(), nil)), expr.DisableBuiltin("type"))
 				if err != nil {
 					return v, err
 				}

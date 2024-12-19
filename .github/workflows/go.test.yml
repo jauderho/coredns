@@ -9,12 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Setup Go Version
+        run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
 
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed  # v5.1.0
         with:
-          go-version: '~1.20.0'
+          go-version: ${{ env.GO_VERSION }}
         id: go
 
       - name: Build
@@ -31,12 +34,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Setup Go Version
+        run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
 
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed  # v5.1.0
         with:
-          go-version: '~1.20.0'
+          go-version: ${{ env.GO_VERSION }}
         id: go
 
       - name: Build
@@ -50,12 +56,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed  # v5.1.0
         with:
-          go-version: '~1.20.0'
+          go-version: ${{ env.GO_VERSION }}
         id: go
 
       - name: Build
@@ -71,7 +77,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Install dependencies
         run: sudo apt-get install make curl

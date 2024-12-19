@@ -4,7 +4,9 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/coredns/caddy"
@@ -167,6 +169,7 @@ func parseStanza(c *caddy.Controller) (*Forward, error) {
 }
 
 func parseBlock(c *caddy.Controller, f *Forward) error {
+	config := dnsserver.GetConfig(c)
 	switch c.Val() {
 	case "except":
 		ignore := c.RemainingArgs()
@@ -233,6 +236,11 @@ func parseBlock(c *caddy.Controller, f *Forward) error {
 			return c.ArgErr()
 		}
 
+		for i := range args {
+			if !filepath.IsAbs(args[i]) && config.Root != "" {
+				args[i] = filepath.Join(config.Root, args[i])
+			}
+		}
 		tlsConfig, err := pkgtls.NewTLSConfigFromArgs(args...)
 		if err != nil {
 			return err
@@ -282,7 +290,22 @@ func parseBlock(c *caddy.Controller, f *Forward) error {
 		}
 		f.ErrLimitExceeded = errors.New("concurrent queries exceeded maximum " + c.Val())
 		f.maxConcurrent = int64(n)
+	case "next":
+		args := c.RemainingArgs()
+		if len(args) == 0 {
+			return c.ArgErr()
+		}
 
+		for _, rcode := range args {
+			var rc int
+			var ok bool
+
+			if rc, ok = dns.StringToRcode[strings.ToUpper(rcode)]; !ok {
+				return fmt.Errorf("%s is not a valid rcode", rcode)
+			}
+
+			f.nextAlternateRcodes = append(f.nextAlternateRcodes, rc)
+		}
 	default:
 		return c.Errf("unknown property '%s'", c.Val())
 	}

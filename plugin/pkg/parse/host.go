@@ -61,6 +61,8 @@ func HostPortOrFile(s ...string) ([]string, error) {
 				ss = net.JoinHostPort(host, transport.Port)
 			case transport.TLS:
 				ss = transport.TLS + "://" + net.JoinHostPort(host, transport.TLSPort)
+			case transport.QUIC:
+				ss = transport.QUIC + "://" + net.JoinHostPort(host, transport.QUICPort)
 			case transport.GRPC:
 				ss = transport.GRPC + "://" + net.JoinHostPort(host, transport.GRPCPort)
 			case transport.HTTPS:
@@ -97,7 +99,7 @@ func tryFile(s string) ([]string, error) {
 
 	servers := []string{}
 	for _, s := range c.Servers {
-		servers = append(servers, net.JoinHostPort(s, c.Port))
+		servers = append(servers, net.JoinHostPort(stripZone(s), c.Port))
 	}
 	return servers, nil
 }
